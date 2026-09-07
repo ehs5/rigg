@@ -287,10 +287,21 @@ async function resolveOptions(argv: Argv): Promise<Options> {
   }
 }
 
+/** Initializes a git repository in targetDir, unless git is missing or targetDir is already inside one. */
 async function initializeGit(options: Options, targetDir: string) {
   const git = spawn.sync("git", ["--version"], { stdio: "ignore" })
   if (git.error || git.status !== 0) {
     p.log.info("Git not found. Skipping repository initialization.")
+    return
+  }
+
+  // Skip init if targetDir is already inside a git work tree (e.g. scaffolding into a monorepo)
+  const insideWorkTree = spawn.sync("git", ["rev-parse", "--is-inside-work-tree"], {
+    cwd: targetDir,
+    stdio: "ignore",
+  })
+  if (insideWorkTree.status === 0) {
+    p.log.info("Already inside a git repository. Skipping git init.")
     return
   }
 

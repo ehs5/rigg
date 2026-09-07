@@ -42,4 +42,24 @@ describe("scaffolder", () => {
       }
     })
   }
+
+  it.skipIf(!hasBin("npm"))(
+    "skips git init when scaffolding inside an existing git repo",
+    { timeout: TIMEOUT },
+    () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rigg-test-"))
+      try {
+        spawnSync("git", ["init", "-b", "main"], { cwd: tmpDir })
+
+        const result = scaffold("npm", tmpDir)
+        expect(result.status, result.stderr as string).toBe(0)
+
+        const projectDir = path.join(tmpDir, "test-project")
+        expect(fs.existsSync(path.join(projectDir, "package.json"))).toBe(true)
+        expect(fs.existsSync(path.join(projectDir, ".git"))).toBe(false)
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true })
+      }
+    },
+  )
 })
