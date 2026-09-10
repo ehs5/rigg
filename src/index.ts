@@ -300,6 +300,7 @@ async function initializeGit(options: Options, targetDir: string) {
     cwd: targetDir,
     stdio: "ignore",
   })
+
   if (insideWorkTree.status === 0) {
     p.log.info("Already inside a git repository. Skipping git init.")
     return
