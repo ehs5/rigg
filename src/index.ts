@@ -17,7 +17,7 @@ import {
 } from "./frameworks.js"
 import { type PkgManager, PKG_MANAGERS } from "./pkg-managers.js"
 
-type Argv = mri.Argv<{ framework?: string; pm?: string; verbose?: boolean }>
+type Argv = mri.Argv<{ framework?: string; pm?: string; verbose?: boolean; version?: boolean }>
 
 const PRIMARY: [number, number, number] = [251, 146, 60]
 const SECONDARY: [number, number, number] = [236, 72, 153]
@@ -330,13 +330,26 @@ async function formatCode(options: Options, targetDir: string) {
   spin.stop("Code formatted")
 }
 
+/** Reads the CLI's own version from its package.json. */
+function getVersion(): string {
+  const directory: string = path.dirname(fileURLToPath(import.meta.url))
+  const pkgJsonPath: string = path.join(directory, "..", "package.json")
+  const pkg: { version: string } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"))
+  return pkg.version
+}
+
 async function main(): Promise<void> {
   // Parse CLI arguments
   const argv: Argv = mri(process.argv.slice(2), {
     string: ["framework", "pm"],
-    boolean: ["verbose"],
+    boolean: ["verbose", "version"],
     alias: { f: "framework", v: "verbose" },
   })
+
+  if (argv.version) {
+    console.log(getVersion())
+    return
+  }
 
   showIntro()
 
