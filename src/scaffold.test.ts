@@ -65,4 +65,29 @@ describe("scaffolder", () => {
       }
     },
   )
+
+  it.skipIf(!hasBin(pm))(
+    "ignores dist and node_modules in the generated lint/format configs",
+    { timeout: TIMEOUT },
+    () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rigg-test-"))
+      try {
+        const result = scaffold(pm, tmpDir)
+        expect(result.status, result.stderr as string).toBe(0)
+
+        const projectDir = path.join(tmpDir, "test-project")
+        const oxlintConfig = JSON.parse(
+          fs.readFileSync(path.join(projectDir, ".oxlintrc.json"), "utf-8"),
+        ) as Record<string, unknown>
+        const oxfmtConfig = JSON.parse(
+          fs.readFileSync(path.join(projectDir, ".oxfmtrc.json"), "utf-8"),
+        ) as Record<string, unknown>
+
+        expect(oxlintConfig.ignorePatterns).toEqual(["dist", "node_modules"])
+        expect(oxfmtConfig.ignorePatterns).toEqual(["dist", "node_modules"])
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true })
+      }
+    },
+  )
 })

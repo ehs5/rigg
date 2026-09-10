@@ -313,6 +313,13 @@ async function initializeGit(options: Options, targetDir: string) {
   spin.stop("Git repository initialized")
 }
 
+/** Adds dist and node_modules to a generated oxlint/oxfmt config's ignorePatterns. */
+function addIgnorePatterns(configPath: string) {
+  const config: { ignorePatterns?: string[] } = JSON.parse(fs.readFileSync(configPath, "utf-8"))
+  config.ignorePatterns = ["dist", "node_modules"]
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n")
+}
+
 /**
  * Creates oxlint+oxfmt configuration files and formats the code.
  */
@@ -326,6 +333,10 @@ async function formatCode(options: Options, targetDir: string) {
   spin.start("Formatting code...")
   await run(pkgManager, [execCmd, "oxlint", ...sep, "--init"], { cwd: targetDir, stdio })
   await run(pkgManager, [execCmd, "oxfmt", ...sep, "--init"], { cwd: targetDir, stdio })
+
+  addIgnorePatterns(path.join(targetDir, ".oxlintrc.json"))
+  addIgnorePatterns(path.join(targetDir, ".oxfmtrc.json"))
+
   await run(pkgManager, [execCmd, "oxfmt", ...sep, "."], { cwd: targetDir, stdio })
   spin.stop("Code formatted")
 }
